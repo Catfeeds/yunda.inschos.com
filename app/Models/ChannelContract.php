@@ -21,4 +21,7 @@ class ChannelContract extends Model{
     {
         return $this->hasOne('App\Models\Order','union_order_code', 'union_order_code');
     }
+    public  function person(){
+		return $this->hasOne('App\Models\Person','papers_code', 'channel_user_code');
+	}
 }

@@ -9,6 +9,7 @@
 namespace App\Http\Controllers\ChannelsApiControllers;
 
 use App\Models\ChannelContract;
+use App\Models\Person;
 use Illuminate\Http\Request;
 use App\Helper\RsaSignHelp;
 use App\Helper\AesEncrypt;
@@ -49,37 +50,45 @@ class WechatPreController extends BaseController
 	 * 第二天联合登陆后进行投保操作（代扣，异步操作）
 	 */
 	public function wechatPre(){
-		$login_person = ChannelJointLogin::where('login_start','>=',strtotime(date('Y-m-d',strtotime('-1 day'))))
-			->where('login_start','<',strtotime(date('Y-m-d')))
+		$channel_contract_info = ChannelContract::groupBy('channel_user_code')
+			->select('openid','channel_user_code')
 			->with(['person'=>function($a){
 				$a->select('name','papers_type','papers_code','phone','email','address','address_detail');
 			}])
-			->select('phone','login_start')
+			//openid,签约人身份证号
 			->get();
-		foreach ($login_person as $value){
-			if(!isset($value['person'])&&empty($value['person'])){
-				return false;
-			}
-			$card_info = IdentityCardHelp::getIDCardInfo($value['person']['papers_code']);
-			if($card_info['status']!=2){
-				return false;
-			}
-			//查询签约状态
-			$contract_res = ChannelContract::where('channel_user_code',$value['person']['papers_code'])
-				->select('is_auto_pay','openid','contract_id','contract_expired_time')
+		if(empty($channel_contract_info)){
+			echo json_encode(['msg'=>'投保失败,没有签约信息','status'=>'500'],JSON_UNESCAPED_UNICODE);
+		}
+		foreach ($channel_contract_info as $key=>$value){
+			$channel_operate_res = ChannelOperate::where('channel_user_code',$value['channel_user_code'])
+				->where('operate_time',date('Y-m-d',time()))
+				->where('prepare_status','200')
+				->select('proposal_num')
 				->first();
-			if(empty($contract_res)){
-				return 'end';
+			if(empty($channel_operate_res)) {
+				if (!empty($value['person'])) {
+					$card_info = IdentityCardHelp::getIDCardInfo($value['channel_user_code']);
+					if ($card_info['status'] = 2) {
+						$joint_login = ChannelJointLogin::where('phone', $value['person']['phone'])->select('login_start')->first();
+						$value['person']['operate_time'] = date('Y-m-d', time());
+						$value['person']['sex'] = $card_info['sex'];
+						$value['person']['birthday'] = $card_info['birthday'];
+						$value['person']['province'] = $value['person']['address'];
+						$value['person']['city'] = $value['person']['address'];
+						$value['person']['county'] = $value['person']['address'];
+						$value['person']['courier_state'] = $value['person']['address_detail'];//站点地址
+						$value['person']['courier_start_time'] = date('Y-m-d H:i:s', $joint_login['login_start']);//上工时间
+						$this->doInsurePrepare($value['person']);
+					}else{
+						echo json_encode(['msg'=>'投保失败,身份证格式不对','status'=>'500'],JSON_UNESCAPED_UNICODE);
+					}
+				}else{
+					echo json_encode(['msg'=>'投保失败,没有投保人信息','status'=>'500'],JSON_UNESCAPED_UNICODE);
+				}
+			}else{
+				echo json_encode(['msg'=>'投保成功，投保单号'.$channel_operate_res['proposal_num'],'status'=>'200'],JSON_UNESCAPED_UNICODE);
 			}
-			$value['person']['operate_time'] = date('Y-m-d',time());
-			$value['person']['sex'] = $card_info['sex'];
-			$value['person']['birthday'] = $card_info['birthday'];
-			$value['person']['province'] = $value['person']['address'];
-			$value['person']['city'] = $value['person']['address'];
-			$value['person']['county'] = $value['person']['address'];
-			$value['person']['courier_state'] = $value['person']['address_detail'];//站点地址
-			$value['person']['courier_start_time'] = date('Y-m-d H:i:s',$value['login_start']);//上工时间
-			$this->doInsurePrepare($value['person']);
 		}
 	}
 
