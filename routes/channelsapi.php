@@ -30,7 +30,8 @@ Route::group(['prefix' => '/channelsapi','namespace'=>'ChannelsApiControllers'],
 	 //todo 测试出单操作
     Route::any('issue_test/{order_id}/{union_order_code}', 'IndexController@insureIssueTest');
     Route::any('issue_tests', 'IndexController@insureIssueTests');
-	
+    Route::any('wechat_pre', 'WechatPreController@wechatPre');
+
     //定时出单
     Route::any('issue_auto', 'ChannelInfosController@issueAuto');
     Route::any('wechat_pay_auto', 'ChannelInfosController@wechatPayAuto');
