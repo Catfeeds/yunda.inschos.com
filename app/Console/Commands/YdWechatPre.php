@@ -88,6 +88,14 @@ class YdWechatPre extends Command
 			if(empty($contract_res)){
 				return 'end';
 			}
+			$channel_operate_res = ChannelOperate::where('channel_user_code',$value['person']['papers_code'])
+				->where('operate_time',date('Y-m-d',time()))
+				->where('prepare_status','200')
+				->select('proposal_num')
+				->first();
+			if(!empty($channel_operate_res)){
+				return 'end';
+			}
 			$value['person']['operate_time'] = date('Y-m-d',time());
 			$value['person']['sex'] = $card_info['sex'];
 			$value['person']['birthday'] = $card_info['birthday'];
