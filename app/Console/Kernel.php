@@ -20,7 +20,6 @@ class Kernel extends ConsoleKernel
         Commands\YunDaPay::class,
         Commands\YunDaIssue::class,
         Commands\YunDaPre::class,
-        Commands\YdIssue::class,
         Commands\YdWechatPre::class,
     ];
 
@@ -34,7 +33,7 @@ class Kernel extends ConsoleKernel
     {
 		
 
-		$schedule->command('yunda_wechat_prepare')->everyMinute()->between('00:00',  '10:00')->runInBackground();
+		$schedule->command('yunda_wechat_prepare')->everyMinute()->between('00:00',  '16:00')->runInBackground();
 		$schedule->command('yunda_pay')->hourly()->between('00:00',  '23:59')->runInBackground();
 //		  $schedule->command('yunda_pre')->everyMinute()->runInBackground();
 //        $schedule->command('yunda_issue')->hourly()->between('01:00',  '23:00')->runInBackground();
