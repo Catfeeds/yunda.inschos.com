@@ -56,7 +56,7 @@ class ChannelInfosController extends BaseController
         $params = $this->request->all();
         $biz_content = $params['biz_content'];
         Redis::rPush("prepare_info",$biz_content);//入队操作
-		LogHelper::logChannelSuccess($biz_content, 'biz_content');
+		////Loghelper::logChannelSuccess($biz_content, 'biz_content');
         return json_encode(['status' => '200', 'content' => '预订单信息已收到'],JSON_UNESCAPED_UNICODE);
     }
 
@@ -78,7 +78,7 @@ class ChannelInfosController extends BaseController
 //            ]);die;
         $count = Redis::Llen('prepare_info');
 
-		//LogHelper::logChannelSuccess($count, 'YD_prepara_count');
+		//////Loghelper::logChannelSuccess($count, 'YD_prepara_count');
         if($count<1){
             // TimedTask::insert([
                     // 'task_name'=>'yd_insure',
@@ -97,7 +97,7 @@ class ChannelInfosController extends BaseController
 		
 		$time_log['start_time'] = date('Y-m-d H:i:s', time());
 		
-        // LogHelper::logChannelSuccess(date('Y-m-d H:i:s', time()), 'YD_check_insure_start_time');
+        // ////Loghelper::logChannelSuccess(date('Y-m-d H:i:s', time()), 'YD_check_insure_start_time');
         $file_area = "/var/www/html/yunda.inschos.com/public/Tk_area.json";
         $file_bank = "/var/www/html/yunda.inschos.com/public/Tk_bank.json";
         $json_area = file_get_contents($file_area);
@@ -107,7 +107,7 @@ class ChannelInfosController extends BaseController
 		for($i=0;$i<$count;$i++) {
 			$value = json_decode(base64_decode(Redis::lpop('prepare_info')),true);
 			
-			//LogHelper::logChannelSuccess($value, 'YD_value');
+			//////Loghelper::logChannelSuccess($value, 'YD_value');
 			foreach($value as $key=>$item){//每次1000条数据
 				if(key_exists($item['channel_provinces'],$area)) {
 					$item['channel_provinces'] = $area[$item['channel_provinces']];
@@ -144,11 +144,11 @@ class ChannelInfosController extends BaseController
 			}
 			$time_log['end_time'] = date('Y-m-d H:i:s', time());	
 			$time_log['count'] = $count;	
-			LogHelper::logChannelSuccess($time_log, 'Yd_time_log');
+			////Loghelper::logChannelSuccess($time_log, 'Yd_time_log');
         }
 		$time_log['end_time'] = date('Y-m-d H:i:s', time());	
 		$time_log['count'] = $count;	
-        LogHelper::logChannelSuccess($time_log, 'Yd_time_log_for');
+        ////Loghelper::logChannelSuccess($time_log, 'Yd_time_log_for');
 		
 		
 		
@@ -159,7 +159,7 @@ class ChannelInfosController extends BaseController
 //        ]);
         echo '<br/>处理结束<br/>';
         echo '<br/>处理结束时间'.date('Y-m-d H:i:s', time());
-        // LogHelper::logChannelSuccess(date('Y-m-d H:i:s', time()), 'YD_check_insure_end_time');
+        // ////Loghelper::logChannelSuccess(date('Y-m-d H:i:s', time()), 'YD_check_insure_end_time');
         return 'end';
 //        }elseif($timed_task_res->status=='1'){
 //            TimedTask::where('task_name','yd_insure')->update([
@@ -402,7 +402,7 @@ class ChannelInfosController extends BaseController
         }catch (\Exception $e)
         {
             DB::rollBack();
-            LogHelper::logChannelError([$return_data, $prepare], $e->getMessage(), 'addOrder');
+            ////Loghelper::logChannelError([$return_data, $prepare], $e->getMessage(), 'addOrder');
             return false;
         }
     }
@@ -480,10 +480,10 @@ class ChannelInfosController extends BaseController
             Order::where('order_code',$union_order_code)
                 ->update(['status'=>'1']);
 			DB::commit();
-			LogHelper::logPay(date('Y-m-d H:i:s',time()), 'YD_pay_end_'.$person_code);
+			////Loghelper::logPay(date('Y-m-d H:i:s',time()), 'YD_pay_end_'.$person_code);
 			}catch (\Exception $e){
 				DB::rollBack();	
-			LogHelper::logPay(date('Y-m-d H:i:s',time()), 'YD_pay_error_'.$person_code);				
+			////Loghelper::logPay(date('Y-m-d H:i:s',time()), 'YD_pay_error_'.$person_code);
 				return false;
 			}
         }
@@ -543,7 +543,7 @@ class ChannelInfosController extends BaseController
     public function wechatPayAuto()
     {
         set_time_limit(0);//永不超时
-		LogHelper::logPay(date('Y-m-d H:i:s',time()), 'YD_pay_start');
+		////Loghelper::logPay(date('Y-m-d H:i:s',time()), 'YD_pay_start');
 		$channel_operate_info = ChannelOperate::where('prepare_status','200')//预投保成功
                 ->where('pay_status','<>','200')//预投保成功
                 ->where('operate_time',date('Y-m-d',time()-24*3600))//前一天的订单
@@ -551,7 +551,7 @@ class ChannelInfosController extends BaseController
                 ->select('proposal_num','channel_user_code')
 				->get();
 		if(count($channel_operate_info)=='0'){
-			LogHelper::logPay(date('Y-m-d H:i:s',time()), 'YD_pay_die');
+			////Loghelper::logPay(date('Y-m-d H:i:s',time()), 'YD_pay_die');
 			die;
 		}
         //循环请求，免密支付
@@ -580,14 +580,14 @@ class ChannelInfosController extends BaseController
                 ->withTimeout(60)
                 ->post();
             // print_r($response);die;
-			LogHelper::logPay($response->content, 'YD_pay_return_data_'.$union_order_code);
+			////Loghelper::logPay($response->content, 'YD_pay_return_data_'.$union_order_code);
             if($response->status != 200){
-				LogHelper::logPay($person_code,$response->content??"",'YD_pay_fail');
+				////Loghelper::logPay($person_code,$response->content??"",'YD_pay_fail');
                 ChannelOperate::where('channel_user_code',$person_code)
                     ->where('proposal_num',$union_order_code)
                     ->update(['pay_status'=>'500','pay_content'=>$response->content]);            
             }
-			LogHelper::logPay($person_code, 'YD_pay_ok_'.$union_order_code);
+			////Loghelper::logPay($person_code, 'YD_pay_ok_'.$union_order_code);
 			DB::beginTransaction();
 			try{
             $return_data =  json_decode($response->content,true);//返回数据
@@ -600,10 +600,10 @@ class ChannelInfosController extends BaseController
             Order::where('order_code',$union_order_code)
                 ->update(['status'=>'1']);
 			DB::commit();
-			LogHelper::logPay(date('Y-m-d H:i:s',time()), 'YD_pay_end_'.$person_code);
+			////Loghelper::logPay(date('Y-m-d H:i:s',time()), 'YD_pay_end_'.$person_code);
 			}catch (\Exception $e){
 				DB::rollBack();	
-			LogHelper::logPay(date('Y-m-d H:i:s',time()), 'YD_pay_error_'.$person_code);				
+			////Loghelper::logPay(date('Y-m-d H:i:s',time()), 'YD_pay_error_'.$person_code);
 				return false;
 			}
         }
@@ -619,7 +619,7 @@ class ChannelInfosController extends BaseController
     public function issueListAuto()
     {
         set_time_limit(0);//永不超时
-        LogHelper::logSuccess(date('Y-m-d H:i:s',time()), 'YD_issue_start');
+        ////Loghelper::logSuccess(date('Y-m-d H:i:s',time()), 'YD_issue_start');
         $warranty_rule = WarrantyRule::whereHas('warranty_rule_order',function ($a){
             $a->where('status','1');//已支付订单
         })
@@ -635,14 +635,14 @@ class ChannelInfosController extends BaseController
             $result = $i->issue($value);
             if(!$result){
                 $respose =  json_encode(['status'=>'503','content'=>'出单失败'],JSON_UNESCAPED_UNICODE);
-                LogHelper::logError($respose, 'YD_issue_fail_'.$value['union_order_code']);
+                ////Loghelper::logError($respose, 'YD_issue_fail_'.$value['union_order_code']);
             }
             ChannelOperate::where('proposal_num',$value['union_order_code'])
                 ->update(['issue_status'=>'200']);
             $respose =  json_encode(['status'=>'200','content'=>'出单完成'],JSON_UNESCAPED_UNICODE);
-            LogHelper::logSuccess($respose, 'YD_issue_success_'.$value['union_order_code']);
+            ////Loghelper::logSuccess($respose, 'YD_issue_success_'.$value['union_order_code']);
         }
-       LogHelper::logSuccess(date('Y-m-d H:i:s',time()), 'YD_issue_end');
+       ////Loghelper::logSuccess(date('Y-m-d H:i:s',time()), 'YD_issue_end');
     }
 }
 

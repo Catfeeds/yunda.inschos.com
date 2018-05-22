@@ -184,7 +184,7 @@ class TaskController extends Controller
             DB::commit();
         } catch (\Exception $e) {
             DB::rollback();
-            LogHelper::logError($request->input(), $e->getMessage());
+            //Loghelper::logError($request->input(), $e->getMessage());
             return back()->withErrors('追加任务失败');
         }
 
@@ -256,7 +256,7 @@ class TaskController extends Controller
             DB::commit();
         } catch (\Exception $e) {
             DB::rollback();
-            LogHelper::logError($request->input(), $e->getMessage());
+            //Loghelper::logError($request->input(), $e->getMessage());
             return back()->withErrors('追加任务失败');
         }
 

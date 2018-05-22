@@ -67,7 +67,7 @@ class IndexController extends BaseController
 	public function getAccount()
 	{
 		$all = $this->request->all();
-		// LogHelper::logChannelError($all, 'YD_get_account');
+		// ////Loghelper::logChannelError($all, 'YD_get_account');
 		if (!is_array($all)) {
 			$all = json_decode($all, true);
 		}
@@ -173,7 +173,7 @@ class IndexController extends BaseController
 	{
 		//解签得到渠道传过来的参数
 		$params = $this->request->all();
-		// LogHelper::logChannelError($params, 'YD_get_token');
+		// ////Loghelper::logChannelError($params, 'YD_get_token');
 		if (!is_array($params)) {
 			$params = json_decode($params, true);
 		}
@@ -396,7 +396,7 @@ class IndexController extends BaseController
 			$cip = "无法获取！";
 		}
 		$ip = $cip;
-		LogHelper::logSuccess(date('YmdHis', time()) . '--' . $ip, 'login_do_insure_start');
+		////Loghelper::logSuccess(date('YmdHis', time()) . '--' . $ip, 'login_do_insure_start');
 		$access_token = $this->request->header('access-token');
 		$access_token_data = json_decode($this->sign_help->base64url_decode($access_token), true);
 		$person_code = $access_token_data['person_code'];
@@ -504,17 +504,17 @@ class IndexController extends BaseController
 			$cip = "无法获取！";
 		}
 		$ip = $cip;
-		LogHelper::logSuccess(date('YmdHis', time()) . '--' . $ip, 'login_to_insure_start');
+		////Loghelper::logSuccess(date('YmdHis', time()) . '--' . $ip, 'login_to_insure_start');
 		$access_token = $this->request->header('access-token');
 		$access_token_data = json_decode($this->sign_help->base64url_decode($access_token), true);
-		// LogHelper::logSuccess($access_token_data,'access_token_data');
+		// ////Loghelper::logSuccess($access_token_data,'access_token_data');
 		$person_code = $access_token_data['person_code'];
 		$person_phone = $access_token_data['person_phone'];
-		LogHelper::logChannelSuccess($person_code . '--' . $ip, 'login_to_insure');
+		////Loghelper::logChannelSuccess($person_code . '--' . $ip, 'login_to_insure');
 		//查询签约情况
 		$contrant_res = ChannelContract::where('channel_user_code', $person_code)->select('contract_expired_time')->first();
 		if (!empty($contrant_res)) {
-			LogHelper::logSuccess(date('YmdHis', time()) . '--' . $ip, 'login_to_insure_end');
+			////Loghelper::logSuccess(date('YmdHis', time()) . '--' . $ip, 'login_to_insure_end');
 			return view('frontend.channels.to_insure')
 				->with('url', '')
 				->with('status', '0');//已签约
@@ -548,17 +548,17 @@ class IndexController extends BaseController
 			ChannelOperate::where('channel_user_code', $person_code)
 				->where('proposal_num', $union_order_code)
 				->update(['pay_status' => '500', 'pay_content' => $response->content]);
-			LogHelper::logError($response->content, 'YD_insure_sign_error_' . $union_order_code);
+			////Loghelper::logError($response->content, 'YD_insure_sign_error_' . $union_order_code);
 			$respose = json_encode(['status' => '502', 'content' => '支付签约失败'], JSON_UNESCAPED_UNICODE);
-			LogHelper::logSuccess(date('YmdHis', time()) . '--' . $ip, 'login_to_insure_end');
+			////Loghelper::logSuccess(date('YmdHis', time()) . '--' . $ip, 'login_to_insure_end');
 			return view('frontend.channels.to_insure')
 				->with('url', '')
 				->with('status', '0');//已签约
 		}
 		$return_data = json_decode($response->content, true);//签约返回数据
 		$url = $return_data['result_content']['contracturl'];//禁止转义
-		LogHelper::logChannelSuccess($url, 'YD_insure_sign_url');
-		LogHelper::logSuccess(date('YmdHis', time()) . '--' . $ip, 'login_to_insure_end');
+		////Loghelper::logChannelSuccess($url, 'YD_insure_sign_url');
+		////Loghelper::logSuccess(date('YmdHis', time()) . '--' . $ip, 'login_to_insure_end');
 		return view('frontend.channels.to_insure')
 			->with('url', $url)
 			->with('status', '1');//未签约
@@ -761,7 +761,7 @@ class IndexController extends BaseController
 	public function contractCallBack()
 	{
 		$input = $this->request->all();
-		LogHelper::logCallBack($input, 'contractCallBack');
+		////Loghelper::logCallBack($input, 'contractCallBack');
 		$contract_code = $input['contract_code'];
 		$union_order_code = substr($contract_code, 0, -8);
 		$channel_res = ChannelOperate::where('proposal_num', $union_order_code)->select('channel_user_code')->first();
@@ -800,7 +800,7 @@ class IndexController extends BaseController
 		$access_token_data = json_decode($this->sign_help->base64url_decode($access_token), true);
 		$channel_code = $access_token_data['channel_code'];
 		$person_code = $access_token_data['person_code'];
-		LogHelper::logChannelSuccess($person_code, 'YD_insure_pay_person_code');
+		////Loghelper::logChannelSuccess($person_code, 'YD_insure_pay_person_code');
 		$person_phone = $access_token_data['person_phone'];
 		$channel_contract_info = ChannelContract::where('channel_user_code', $person_code)->select(['openid', 'contract_id'])->first();
 		$channel_res = ChannelOperate::where('channel_user_code', $person_code)
@@ -812,7 +812,7 @@ class IndexController extends BaseController
 			return redirect('/channelsapi/to_insure')->with('status', '支付失败');
 		}
 		$union_order_code = $channel_res['proposal_num'];
-		LogHelper::logChannelSuccess($union_order_code, 'YD_insure_pay_order_code');
+		////Loghelper::logChannelSuccess($union_order_code, 'YD_insure_pay_order_code');
 		$data = [];
 		$data['price'] = '2';
 		$data['private_p_code'] = 'VGstMTEyMkEwMUcwMQ';
@@ -828,18 +828,18 @@ class IndexController extends BaseController
 			->withData($data)
 			->withTimeout(60)
 			->post();
-		LogHelper::logChannelSuccess($response, 'YD_insure_pay_return_data');
+		////Loghelper::logChannelSuccess($response, 'YD_insure_pay_return_data');
 		// print_r($response);die;
 		if ($response->status != 200) {
 			ChannelOperate::where('channel_user_code', $person_code)
 				->where('proposal_num', $union_order_code)
 				->update(['pay_status' => '500', 'pay_content' => $response->content]);
-			LogHelper::logChannelSuccess($person_code, 'YD_insure_pay_person_code_error');
+			////Loghelper::logChannelSuccess($person_code, 'YD_insure_pay_person_code_error');
 			return redirect('/channelsapi/to_insure')->with('status', '支付失败');
 		}
-		LogHelper::logChannelSuccess($person_code, 'YD_insure_pay_person_code_success');
+		////Loghelper::logChannelSuccess($person_code, 'YD_insure_pay_person_code_success');
 		$return_data = json_decode($response->content, true);//返回数据
-		// LogHelper::logChannelSuccess($return_data, 'pay_return_data');
+		// ////Loghelper::logChannelSuccess($return_data, 'pay_return_data');
 		//TODO  可以改变订单表的状态
 		ChannelOperate::where('channel_user_code', $person_code)
 			->where('proposal_num', $union_order_code)
@@ -954,7 +954,7 @@ class IndexController extends BaseController
 			return true;
 		} catch (\Exception $e) {
 			DB::rollBack();
-			LogHelper::logChannelError([$return_data, $prepare], $e->getMessage(), 'addOrder');
+			////Loghelper::logChannelError([$return_data, $prepare], $e->getMessage(), 'addOrder');
 			return false;
 		}
 	}
@@ -980,7 +980,7 @@ class IndexController extends BaseController
 //            ->where('operate_time',date('Y-m-d',time()))
 //            ->first();
 //        if(empty($channel_operete_res)){
-//            LogHelper::logChannelError($channel_operete_res, 'YD_pay_order_'.$person_code);
+//            ////Loghelper::logChannelError($channel_operete_res, 'YD_pay_order_'.$person_code);
 //            $return_data =  $respose =  json_encode(['status'=>'502','content'=>'没有找到订单信息！'],JSON_UNESCAPED_UNICODE);
 //            return $return_data;
 //        }
@@ -1020,11 +1020,11 @@ class IndexController extends BaseController
 			ChannelOperate::where('channel_user_code', $person_code)
 				->where('proposal_num', $proposal_num)
 				->update(['pay_status' => '500', 'pay_content' => $response->content]);
-			// LogHelper::logChannelError($response->content, 'YD_pay_order_'.$proposal_num);
+			// ////Loghelper::logChannelError($response->content, 'YD_pay_order_'.$proposal_num);
 			$respose = json_encode(['status' => '502', 'content' => '支付失败'], JSON_UNESCAPED_UNICODE);
 			return $respose;
 		}
-		// LogHelper::logChannelSuccess($response->content, 'YD_pay_order_'.$proposal_num);
+		// ////Loghelper::logChannelSuccess($response->content, 'YD_pay_order_'.$proposal_num);
 		ChannelOperate::where('channel_user_code', $person_code)
 			->where('proposal_num', $proposal_num)
 			->update(['pay_status' => '200']);
@@ -1054,7 +1054,7 @@ class IndexController extends BaseController
 			$insure_data = json_decode(\Redis::lpop('issue_data'), true);//出队
 			$issue_status = $this->doInsureIssue($insure_data);
 			if (!$issue_status) {
-				LogHelper::logChannelError($insure_data, 'YD_TK_Insure_issue_' . $insure_data);//记录日志
+				////Loghelper::logChannelError($insure_data, 'YD_TK_Insure_issue_' . $insure_data);//记录日志
 			}
 		}
 	}
@@ -1171,9 +1171,9 @@ class IndexController extends BaseController
 //                dump($user_info);
 //                die;
 		if (empty($address) && empty($member) && empty($user_info)) {
-			// LogHelper::logChannelError($member, 'YD_TK_get_init_member');
-			// LogHelper::logChannelError($address, 'YD_TK_get_init_area');
-			// LogHelper::logChannelError($address, 'YD_TK_get_init_user_info');
+			// ////Loghelper::logChannelError($member, 'YD_TK_get_init_member');
+			// ////Loghelper::logChannelError($address, 'YD_TK_get_init_area');
+			// ////Loghelper::logChannelError($address, 'YD_TK_get_init_user_info');
 			$result = json_encode(['status' => '501', 'content' => '初始化出错'], JSON_UNESCAPED_UNICODE);
 			return $result;
 		}
@@ -1196,11 +1196,11 @@ class IndexController extends BaseController
 			->withData($datas)
 			->withTimeout(60)
 			->post();
-		LogHelper::logChannelError($response, 'YD_TK_sms');
+		////Loghelper::logChannelError($response, 'YD_TK_sms');
 //        print_r($response);die;
 		if ($response->status != 200) {
 			$content = $response->content;
-			LogHelper::logChannelError($content, 'YD_TK_claim_step1');
+			////Loghelper::logChannelError($content, 'YD_TK_claim_step1');
 			$respose = json_encode(['status' => '501', 'content' => '出险人信息提交失败'], JSON_UNESCAPED_UNICODE);
 			print_r($respose);
 			return back()->with('status', '出险人信息提交失败');
@@ -1525,7 +1525,7 @@ class IndexController extends BaseController
 //            print_r($response);die;
 			if ($response->status != 200) {
 				$content = $response->content;
-				LogHelper::logChannelError($content, 'YD_TK_claim_upload_metarial');
+				////Loghelper::logChannelError($content, 'YD_TK_claim_upload_metarial');
 				$respose = json_encode(['status' => '501', 'content' => '理赔资料提交失败'], JSON_UNESCAPED_UNICODE);
 				print_r($respose);
 				return back()->with('status', '理赔资料提交失败');
@@ -1554,7 +1554,7 @@ class IndexController extends BaseController
 		//        print_r($response);die;
 		if ($response->status != 200) {
 			$content = $response->content;
-			LogHelper::logChannelError($content, 'YD_TK_sms_send');
+			////Loghelper::logChannelError($content, 'YD_TK_sms_send');
 			$result = json_encode(['status' => '501', 'content' => $response->content], JSON_UNESCAPED_UNICODE);
 			return $result;
 		}
@@ -1599,7 +1599,7 @@ class IndexController extends BaseController
 			->post();
 		if ($response->status != 200) {
 			$content = $response->content;
-			LogHelper::logChannelError($content, 'YD_TK_email_send');
+			////Loghelper::logChannelError($content, 'YD_TK_email_send');
 			$respose = json_encode(['status' => '501', 'content' => '邮件发送出错'], JSON_UNESCAPED_UNICODE);
 			return $respose;
 		}
@@ -1672,10 +1672,10 @@ class IndexController extends BaseController
 			->post();
 		if ($response->status != 200) {
 			$content = $response->content;
-			LogHelper::logChannelError($content, 'YD_TK_Claim_Info_error');
+			////Loghelper::logChannelError($content, 'YD_TK_Claim_Info_error');
 			return back()->with('status', '获取理赔详情出错');
 		}
-		LogHelper::logChannelError($response->content, 'YD_TK_Claim_Info');
+		////Loghelper::logChannelError($response->content, 'YD_TK_Claim_Info');
 		$apply_res = ChannelClaimApply::where('warranty_code', $warranty_code)
 			->where('claim_start_status', '200')
 			->with('warrantyRule', 'warrantyRule.warranty_product', 'warrantyRule.warranty_rule_order.warranty_recognizee')
@@ -1757,7 +1757,7 @@ class IndexController extends BaseController
 			->post();
 		if ($response->status != 200) {
 			$content = $response->content;
-			LogHelper::logChannelError($content, 'YD_TK_claim_del_metarial');
+			////Loghelper::logChannelError($content, 'YD_TK_claim_del_metarial');
 			$respose = json_encode(['status' => '501', 'content' => '理赔资料删除失败'], JSON_UNESCAPED_UNICODE);
 			return $respose;
 		}
@@ -1801,7 +1801,7 @@ class IndexController extends BaseController
 //        print_r($response);die;
 		if ($response->status != 200) {
 			$content = $response->content;
-			LogHelper::logChannelError($content, 'YD_TK_claim_submit_metarial');
+			////Loghelper::logChannelError($content, 'YD_TK_claim_submit_metarial');
 			$respose = json_encode(['status' => '501', 'content' => '理赔资料提交失败'], JSON_UNESCAPED_UNICODE);
 			print_r($respose);
 			return back()->with('status', '理赔资料提交失败');
@@ -1843,7 +1843,7 @@ class IndexController extends BaseController
 
 		if ($response->status != 200) {
 			$content = $response->content;
-			LogHelper::logChannelError($content, 'YD_TK_Claim_Info_error');
+			////Loghelper::logChannelError($content, 'YD_TK_Claim_Info_error');
 			return back()->with('status', '获取理赔详情出错');
 		}
 		$data['claim_flag'] = $claim_save_info['bank_flag'];
@@ -1862,7 +1862,7 @@ class IndexController extends BaseController
 //        print_r($response);die;
 		if ($response->status != 200) {
 			$content = $response->content;
-			LogHelper::logChannelError($content, 'YD_TK_claim_append_metarial');
+			////Loghelper::logChannelError($content, 'YD_TK_claim_append_metarial');
 			$respose = json_encode(['status' => '501', 'content' => '理赔资料提交失败'], JSON_UNESCAPED_UNICODE);
 			print_r($respose);
 			return back()->with('status', '理赔资料提交失败');
@@ -1935,7 +1935,7 @@ class IndexController extends BaseController
 //        print_r($response);die;
 		if ($response->status != 200) {
 			$content = $response->content;
-			LogHelper::logChannelError($content, 'YD_TK_Claim_Info');
+			////Loghelper::logChannelError($content, 'YD_TK_Claim_Info');
 			return back()->with('status', '获取会员信息出错');
 		}
 		$return_data = is_array($response->content) ? json_encode($response->content) : $response->content;
@@ -1960,7 +1960,7 @@ class IndexController extends BaseController
 		//        print_r($response);die;
 		if ($response->status != 200) {
 			$content = $response->content;
-			LogHelper::logChannelError($content, 'YD_TK_Get_Area');
+			////Loghelper::logChannelError($content, 'YD_TK_Get_Area');
 			return back()->with('status', '获取地区初始化信息失败');
 		}
 		$return_data = is_array($response->content) ? json_encode($response->content) : $response->content;
@@ -1996,7 +1996,7 @@ class IndexController extends BaseController
 //        print_r($response);die;
 		if ($response->status != 200) {
 			$content = $response->content;
-			LogHelper::logChannelError($content, 'YD_TK_get_insurant_info');
+			////Loghelper::logChannelError($content, 'YD_TK_get_insurant_info');
 			return back()->with('status', '获取投保人信息失败');
 		}
 		$return_data = is_array($response->content) ? json_encode($response->content) : $response->content;
@@ -2032,7 +2032,7 @@ class IndexController extends BaseController
 //        print_r($response);die;
 		if ($response->status != 200) {
 			$content = $response->content;
-			LogHelper::logChannelError($content, 'YD_TK_Claim_Progress');
+			////Loghelper::logChannelError($content, 'YD_TK_Claim_Progress');
 			return back()->with('status', $content);
 		}
 		$return_data = is_array($response->content) ? json_encode($response->content) : $response->content;
@@ -2082,7 +2082,7 @@ class IndexController extends BaseController
 //        print_r($response);die;
 		if ($response->status != 200) {
 			$content = $response->content;
-			LogHelper::logChannelError($content, 'YD_TK_Claim_tkc_doc_type');
+			////Loghelper::logChannelError($content, 'YD_TK_Claim_tkc_doc_type');
 			return back()->with('status', '获取信息出错');
 		}
 		$return_data = $response->content;
@@ -2106,7 +2106,7 @@ class IndexController extends BaseController
 			->post();
 		if ($response->status != 200) {
 			$content = $response->content;
-			LogHelper::logChannelError($content, 'YD_TK_Claim_tka_doc_type');
+			////Loghelper::logChannelError($content, 'YD_TK_Claim_tka_doc_type');
 			return back()->with('status', '获取信息出错');
 		}
 		$return_data = $response->content;

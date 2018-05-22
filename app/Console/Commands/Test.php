@@ -61,7 +61,7 @@ class Test extends Command
     public function handle()
 	{
        $log = "定时任务开始了".date('Y_m_d H_m_s')."\n";
-       LogHelper::logChannelSuccess($log, 'test_crond');
+       //Loghelper::logChannelSuccess($log, 'test_crond');
 	}
 
 }

@@ -93,7 +93,7 @@ class YunDaPre extends Command
     {
         $count = Redis::Llen('prepare_info');
         if($count<1){
-			LogHelper::logChannelSuccess($count, 'YD_prepara_ok');
+			//Loghelper::logChannelSuccess($count, 'YD_prepara_ok');
             exit;
         }
         set_time_limit(0);//永不超时
@@ -108,9 +108,9 @@ class YunDaPre extends Command
         $area = json_decode($json_area,true);
         $bank = json_decode($json_bank,true);
         for($i=0;$i<$count;$i++) {
-			//LogHelper::logChannelSuccess(Redis::lpop('prepare_info'), 'YD_prepara_params');
+			////Loghelper::logChannelSuccess(Redis::lpop('prepare_info'), 'YD_prepara_params');
             $value = json_decode(base64_decode(Redis::lpop('prepare_info')),true);
-			//LogHelper::logChannelSuccess(json_encode($value), 'YD_prepara_params');
+			////Loghelper::logChannelSuccess(json_encode($value), 'YD_prepara_params');
             foreach($value as $key=>$item){//每次1000条数据
                 if(key_exists($item['channel_provinces'],$area)) {
                     $item['channel_provinces'] = $area[$item['channel_provinces']];
@@ -148,14 +148,14 @@ class YunDaPre extends Command
 			$time_log['end_time'] = date('Y-m-d H:i:s', time());	
 			$time_log['count'] = $count;	
 			$time_log['value'] = count($value);	
-			LogHelper::logChannelSuccess($time_log, 'Yd_time_log_1000');
+			//Loghelper::logChannelSuccess($time_log, 'Yd_time_log_1000');
         }
 		
 		$time_log['end_time'] = date('Y-m-d H:i:s', time());	
 		$time_log['count'] = $count;	
-        LogHelper::logChannelSuccess($time_log, 'time_log_for');
+        //Loghelper::logChannelSuccess($time_log, 'time_log_for');
 		
-        LogHelper::logChannelSuccess($count, 'YD_prepara_ok');
+        //Loghelper::logChannelSuccess($count, 'YD_prepara_ok');
     }
 
 
@@ -383,7 +383,7 @@ class YunDaPre extends Command
         }catch (\Exception $e)
         {
             DB::rollBack();
-            LogHelper::logChannelError([$return_data, $prepare], $e->getMessage(), 'addOrder');
+            //Loghelper::logChannelError([$return_data, $prepare], $e->getMessage(), 'addOrder');
             return false;
         }
     }

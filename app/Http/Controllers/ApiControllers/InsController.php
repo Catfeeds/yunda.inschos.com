@@ -424,7 +424,7 @@ class InsController extends Base
         }catch (\Exception $e)
         {
             DB::rollBack();
-            LogHelper::logError([$return_data, $prepare], $e->getMessage(), 'addOrder');
+            //Loghelper::logError([$return_data, $prepare], $e->getMessage(), 'addOrder');
             return false;
         }
     }

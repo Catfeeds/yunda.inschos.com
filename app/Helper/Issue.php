@@ -36,7 +36,7 @@ protected  $signHelp;
             ->withData($data)
             ->withTimeout(60)
             ->post();
-		LogHelper::logError($response, 'YD_issue_return_data');
+		//Loghelper::logError($response, 'YD_issue_return_data');
         //print_r($response);die;
 //        dd(json_decode($response->content, true));exit;
         $status = $response->status;

@@ -88,7 +88,7 @@ class YunDaIssue extends Command
     public function handle()
     {
 		set_time_limit(0);//永不超时
-		LogHelper::logSuccess(date('Y-m-d H:i:s',time()), 'YD_issue_start');
+		//Loghelper::logSuccess(date('Y-m-d H:i:s',time()), 'YD_issue_start');
         $warranty_rule = WarrantyRule::whereHas('warranty_rule_order',function ($a){
             $a->where('status','1');//已支付订单
         })
@@ -103,13 +103,13 @@ class YunDaIssue extends Command
             $result = $i->issue($value);
             if(!$result){
                 $respose =  json_encode(['status'=>'503','content'=>'出单失败'],JSON_UNESCAPED_UNICODE);
-                LogHelper::logError($respose, 'YD_issue_fail_'.$value['union_order_code']);
+                //Loghelper::logError($respose, 'YD_issue_fail_'.$value['union_order_code']);
             }
             ChannelOperate::where('proposal_num',$value['union_order_code'])
                 ->update(['issue_status'=>'200']);
             $respose =  json_encode(['status'=>'200','content'=>'出单完成'],JSON_UNESCAPED_UNICODE);
-            LogHelper::logSuccess($respose, 'YD_issue_success_'.$value['union_order_code']);
+            //Loghelper::logSuccess($respose, 'YD_issue_success_'.$value['union_order_code']);
         }
-       LogHelper::logSuccess(date('Y-m-d H:i:s',time()), 'YD_issue_end');
+       //Loghelper::logSuccess(date('Y-m-d H:i:s',time()), 'YD_issue_end');
     }
 }
