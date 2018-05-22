@@ -108,8 +108,8 @@ class YunDaPrepare extends Command
         }
         set_time_limit(0);//永不超时
         echo '处理开始时间'.date('Y-m-d H:i:s', time()).'<br/>';
-        LogHelper::logChannelSuccess(date('Y-m-d H:i:s', time()), 'YD_check_insure_start_time');
-        LogHelper::logChannelSuccess(date('Y-m-d H:i:s', time()), 'YD_my');
+        //Loghelper::logChannelSuccess(date('Y-m-d H:i:s', time()), 'YD_check_insure_start_time');
+        //Loghelper::logChannelSuccess(date('Y-m-d H:i:s', time()), 'YD_my');
         $file_area = "/var/www/html/yunda.inschos.com/public/Tk_area.json";
         $file_bank = "/var/www/html/yunda.inschos.com/public/Tk_bank.json";
         $json_area = file_get_contents($file_area);
@@ -161,10 +161,10 @@ class YunDaPrepare extends Command
 //        ]);
         echo '<br/>处理结束<br/>';
         echo '<br/>处理结束时间'.date('Y-m-d H:i:s', time());
-        // LogHelper::logChannelSuccess(date('Y-m-d H:i:s', time()), 'YD_check_insure_end_time');
-		 LogHelper::logChannelSuccess($count, 'YD_prepara_ok');
+        // //Loghelper::logChannelSuccess(date('Y-m-d H:i:s', time()), 'YD_check_insure_end_time');
+		 //Loghelper::logChannelSuccess($count, 'YD_prepara_ok');
         return 'end';
-		 //LogHelper::logChannelSuccess($count, 'YD_prepara_ok');
+		 ////Loghelper::logChannelSuccess($count, 'YD_prepara_ok');
 //        }elseif($timed_task_res->status=='1'){
 //            TimedTask::where('task_name','yd_insure')->update([
 //                'timestamp'=>time(),
@@ -405,7 +405,7 @@ class YunDaPrepare extends Command
         }catch (\Exception $e)
         {
             DB::rollBack();
-            LogHelper::logChannelError([$return_data, $prepare], $e->getMessage(), 'addOrder');
+            //Loghelper::logChannelError([$return_data, $prepare], $e->getMessage(), 'addOrder');
             return false;
         }
     }

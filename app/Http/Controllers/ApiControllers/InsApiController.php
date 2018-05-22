@@ -83,7 +83,7 @@ class InsApiController
             ->post();
 //        print_r($response->content);exit;
         if($response->status != 200){
-            LogHelper::logError($biz_content, $response->content, 'ty', 'ins_api_info');
+            //Loghelper::logError($biz_content, $response->content, 'ty', 'ins_api_info');
             return "<script>alert('获取产品详情失败');location.href='/';</script>";
         }
         $return_data = json_decode($response->content, true);
@@ -742,18 +742,18 @@ class InsApiController
     public function callBack()
     {
         $input = $this->_request->all();
-		LogHelper::logCallBack($input, 'PayCallBack');
+		//Loghelper::logCallBack($input, 'PayCallBack');
         $notice_type = $input['notice_type'];
         switch($notice_type){
             case 'check_call_back':
                 $order = Order::where('order_code', $input['data']['union_order_code'])->first();
                 if($input['data']['status']){
-                    LogHelper::logSuccess($input, 'ty', 'check_call_back');
+                    //Loghelper::logSuccess($input, 'ty', 'check_call_back');
                     $order->status = 3;
                     $order->save();
                     WarrantyRecognizee::where('order_id', $order->id)->update(['status'=>2]);
                 } else {
-                    LogHelper::logError($input, $input['data']['error_message'], 'ty', 'check_call_back');
+                    //Loghelper::logError($input, $input['data']['error_message'], 'ty', 'check_call_back');
                     $order->status = 6;
                     $order->pay_error_message = $input['data']['error_message'];
                     $order->save();
@@ -763,7 +763,7 @@ class InsApiController
             case 'pay_call_back':   //支付回调通知
                 $order = Order::where('order_code', $input['data']['union_order_code'])->first();              
                 if($input['data']['status']){
-                    LogHelper::logSuccess($input, 'ty', 'pay_call_back');
+                    //Loghelper::logSuccess($input, 'ty', 'pay_call_back');
                     $order->status = config('attribute_status.order.payed');
                     $order->by_stages_way = $input['data']['by_stages_way'];
                     $order->pay_time = date('Y-m-d H:i:s');
@@ -802,7 +802,7 @@ class InsApiController
                     }
                     return 1;
                 }else{
-                    LogHelper::logError($input, $input['data']['error_message'], 'ty', 'pay_call_back');
+                    //Loghelper::logError($input, $input['data']['error_message'], 'ty', 'pay_call_back');
                     $order->status = 3;
                     $order->pay_error_message = $input['data']['error_message'];
                     $order->save();
@@ -1065,7 +1065,7 @@ class InsApiController
         }catch (\Exception $e)
         {
             DB::rollBack();
-            LogHelper::logError([$return_data, $prepare], $e->getMessage(), 'addOrder');
+            //Loghelper::logError([$return_data, $prepare], $e->getMessage(), 'addOrder');
             return false;
         }
     }

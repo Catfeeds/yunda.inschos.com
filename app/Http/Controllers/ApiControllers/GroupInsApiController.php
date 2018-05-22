@@ -43,7 +43,7 @@ class GroupInsApiController{
             ->withTimeout(120)
             ->post();
         if($response->status != 200){
-            LogHelper::logError($biz_content, $response->content, 'ty', 'ins_api_info');
+            //Loghelper::logError($biz_content, $response->content, 'ty', 'ins_api_info');
             return "<script>alert('获取产品详情失败');location.href='/';</script>";
         }
         $return_data = json_decode($response->content, true);

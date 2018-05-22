@@ -88,7 +88,7 @@ class YunDaPay extends Command
     public function handle()
     {
         set_time_limit(0);//永不超时
-		LogHelper::logPay(date('Y-m-d H:i:s',time()), 'YD_pay_start');
+		//Loghelper::logPay(date('Y-m-d H:i:s',time()), 'YD_pay_start');
 		$channel_operate_info = ChannelOperate::where('prepare_status','200')//预投保成功
                 ->where('pay_status','<>','200')//预投保成功
                 ->where('operate_time',date('Y-m-d',time()-24*3600))//前一天的订单
@@ -124,7 +124,7 @@ class YunDaPay extends Command
             $data['union_order_code'] = $union_order_code;
             $data['pay_account'] = $value['openid'];
             $data['contract_id'] = $value['contract_id'];
-			LogHelper::logPay($data, 'YD_pay_data');
+			//Loghelper::logPay($data, 'YD_pay_data');
             $data = $this->signhelp->tySign($data);
             //发送请求
             $response = Curl::to(env('TY_API_SERVICE_URL') . '/ins_curl/wechat_pay_ins')
@@ -133,9 +133,9 @@ class YunDaPay extends Command
                 ->withTimeout(60)
                 ->post();
             // print_r($response);die;
-			LogHelper::logPay($response->content, 'YD_pay_return_data_'.$union_order_code);
+			//Loghelper::logPay($response->content, 'YD_pay_return_data_'.$union_order_code);
             if($response->status != 200){
-				LogHelper::logPay($person_code,$response->content??"",'YD_pay_fail');
+				//Loghelper::logPay($person_code,$response->content??"",'YD_pay_fail');
                 ChannelOperate::where('channel_user_code',$person_code)
                     ->where('proposal_num',$union_order_code)
                     ->update(['pay_status'=>'500','pay_content'=>$response->content]);
@@ -146,7 +146,7 @@ class YunDaPay extends Command
 //                         'is_valid'=>1,//签约失败
 //                     ]);
             }
-			LogHelper::logPay($person_code, 'YD_pay_ok_'.$union_order_code);
+			//Loghelper::logPay($person_code, 'YD_pay_ok_'.$union_order_code);
 			DB::beginTransaction();
 			try{
             $return_data =  json_decode($response->content,true);//返回数据
@@ -159,10 +159,10 @@ class YunDaPay extends Command
             Order::where('order_code',$union_order_code)
                 ->update(['status'=>'1']);
 			DB::commit();
-			LogHelper::logPay(date('Y-m-d H:i:s',time()), 'YD_pay_end_'.$person_code);
+			//Loghelper::logPay(date('Y-m-d H:i:s',time()), 'YD_pay_end_'.$person_code);
 			}catch (\Exception $e){
 				DB::rollBack();	
-			LogHelper::logPay(date('Y-m-d H:i:s',time()), 'YD_pay_error_'.$person_code);				
+			//Loghelper::logPay(date('Y-m-d H:i:s',time()), 'YD_pay_error_'.$person_code);
 				return false;
 			}
         }

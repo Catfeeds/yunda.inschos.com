@@ -332,7 +332,7 @@ class YdWechatPre extends Command
 		}catch (\Exception $e)
 		{
 			DB::rollBack();
-			LogHelper::logChannelError([$return_data, $prepare], $e->getMessage(), 'addOrder');
+			//Loghelper::logChannelError([$return_data, $prepare], $e->getMessage(), 'addOrder');
 			return false;
 		}
 	}
