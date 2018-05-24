@@ -19,6 +19,8 @@ use DB, Validator, Image;
 use App\Models\Order;
 use Cache;
 use App\Models\CompanyBrokerage;
+use App\Models\Person;
+use App\Models\ChannelOperate;
 
 class IndexController extends BaseController
 {

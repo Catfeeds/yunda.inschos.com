@@ -50,12 +50,12 @@ class WechatPreController extends BaseController
 	 * 第二天联合登陆后进行投保操作（代扣，异步操作）
 	 */
 	public function wechatPre(){
-		$channel_contract_info = ChannelContract::groupBy('channel_user_code')
-			->select('openid','channel_user_code')
-			->with(['person'=>function($a){
+		$channel_contract_info = ChannelContract::with(['person'=>function($a){
 				$a->select('name','papers_type','papers_code','phone','email','address','address_detail');
 			}])
 			//openid,签约人身份证号
+			->select('openid','channel_user_code')
+			->groupBy('channel_user_code')
 			->get();
 		if(empty($channel_contract_info)){
 			echo json_encode(['msg'=>'投保失败,没有签约信息','status'=>'500'],JSON_UNESCAPED_UNICODE);
