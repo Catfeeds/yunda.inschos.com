@@ -31,8 +31,6 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-		
-
 		$schedule->command('yunda_wechat_prepare')->everyMinute()->between('00:00',  '23:59')->runInBackground();
 		$schedule->command('yunda_pay')->hourly()->between('00:00',  '23:59')->runInBackground();
 //		  $schedule->command('yunda_pre')->everyMinute()->runInBackground();

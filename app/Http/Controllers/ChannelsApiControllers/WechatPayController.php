@@ -68,35 +68,40 @@ class WechatPayController
 	/**
 	 * 微信代扣支付
 	 * 定时任务，跑支付
+	 * 避免重复支付，在操作表里添加一个字段，表示今天已经支付。
+	 * 如果没有支付成功，用定时任务六小时做一次轮训
 	 */
 	public function wechatPay()
 	{
 		set_time_limit(0);//永不超时
-		$channel_operate_info = ChannelOperate::where('prepare_status', '200')//预投保成功
-			->where('pay_status', '<>', '200')//预投保成功
-			->where('operate_time', date('Y-m-d', time() - 24 * 3600))//前一天的订单
+		$channel_operate_info = ChannelOperate::where('operate_time', date('Y-m-d', time() - 24 * 3600))//前一天的订单
 			->where('is_work', '1')//已上工
+			->where('prepare_status', '200')//预投保成功
 			->select('proposal_num')
 			->get();
 		if (count($channel_operate_info) == '0') {
 			die;
 		}
-		$channel_contract_info = ChannelContract::where('is_valid', '0')//有效签约
-		->where('is_auto_pay', '0')
+		$channel_contract_info = ChannelContract::where('is_auto_pay', '0')
 			->select('openid', 'contract_id', 'contract_expired_time', 'channel_user_code')
 			//openid,签约协议号,签约过期时间,签约人身份证号
-			->groupBy('openid')
+			->groupBy('channel_user_code')
 			->get();
 		//循环请求，免密支付
 		foreach ($channel_contract_info as $value) {
 			$person_code = $value['channel_user_code'];
 			$channel_res = ChannelOperate::where('channel_user_code', $person_code)
 				->where('prepare_status', '200')//预投保成功
-				->where('pay_status', '<>', '200')//预投保成功
+				->where('pay_status','')//预投保成功
+				->orWhere('pay_status','0')
+				->orWhere('pay_status',0)
 				->where('operate_time', date('Y-m-d', time() - 24 * 3600))//前一天的订单
-				//->where('is_work','1')//已上工
+				->where('is_work','1')//已上工
 				->select('proposal_num')
 				->first();
+			if(empty($channel_res)){
+				return 'end';die;
+			}
 			$union_order_code = $channel_res['proposal_num'];
 			$data = [];
 			$data['price'] = '2';
@@ -114,39 +119,41 @@ class WechatPayController
 				->withData($data)
 				->withTimeout(60)
 				->post();
-			// print_r($response);die;
-			//Loghelper::logPay($response->content, 'YD_pay_return_data_'.$union_order_code);
 			if ($response->status != 200) {
-				//Loghelper::logPay($person_code,$response->content??"",'YD_pay_fail');
 				ChannelOperate::where('channel_user_code', $person_code)
 					->where('proposal_num', $union_order_code)
 					->update(['pay_status' => '500', 'pay_content' => $response->content]);
-				//TODO 签约链接失效（业务员自己取消签约了）
-				//TODO 网络延迟等错误，没有判断
-//                ChannelContract::where('channel_user_code',$person_code)
-//                     ->update([
-//                         'is_valid'=>1,//签约失败
-//                     ]);
+			}else{
+				DB::beginTransaction();
+				try {
+					$return_data = json_decode($response->content, true);//返回数据
+					//TODO  可以改变订单表的状态
+					ChannelOperate::where('channel_user_code', $person_code)
+						->where('proposal_num', $union_order_code)
+						->update(['pay_status' => '200']);
+					WarrantyRule::where('union_order_code', $union_order_code)
+						->update(['status' => '1']);
+					Order::where('order_code', $union_order_code)
+						->update(['status' => '1']);
+					DB::commit();
+					//Loghelper::logPay(date('Y-m-d H:i:s',time()), 'YD_pay_end_'.$person_code);
+				} catch (\Exception $e) {
+					DB::rollBack();
+					//Loghelper::logPay(date('Y-m-d H:i:s',time()), 'YD_pay_error_'.$person_code);
+					return false;
+				}
 			}
-			//Loghelper::logPay($person_code, 'YD_pay_ok_'.$union_order_code);
-			DB::beginTransaction();
-			try {
-				$return_data = json_decode($response->content, true);//返回数据
-				//TODO  可以改变订单表的状态
-				ChannelOperate::where('channel_user_code', $person_code)
-					->where('proposal_num', $union_order_code)
-					->update(['pay_status' => '200']);
-				WarrantyRule::where('union_order_code', $union_order_code)
-					->update(['status' => '1']);
-				Order::where('order_code', $union_order_code)
-					->update(['status' => '1']);
-				DB::commit();
-				//Loghelper::logPay(date('Y-m-d H:i:s',time()), 'YD_pay_end_'.$person_code);
-			} catch (\Exception $e) {
-				DB::rollBack();
-				//Loghelper::logPay(date('Y-m-d H:i:s',time()), 'YD_pay_error_'.$person_code);
-				return false;
+			//做标记，说明此订单已经支付过。
+			$mark_res = ChannelOperate::where('proposal_num',$union_order_code)->select('pay_status')->first();
+			if($mark_res['pay_status']==0||$mark_res['pay_status']==''||$mark_res['pay_status']=='0'){
+				$update_res = ChannelOperate::where('proposal_num', $union_order_code)
+				->update(
+					['pay_status' => '300']
+				);
+				dump($update_res);
 			}
+			dump($union_order_code);
+			echo '支付完成';die;
 		}
 	}
 }
