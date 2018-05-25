@@ -13,6 +13,7 @@ return [
 //    'channel_url'=>env('APP_URL').'/channel_info/',
 //    'channel_target_url'=>env('APP_URL').'/channelsapi/',
     'channel_url'=>'/channel_info/',
+	'channel_views'=>'/r_channels/yunda/',
     'channel_target_url'=>'/channelsapi/',
     'agent_url'=>'/view_2/agent/',
     'agent_mob'=>'/view_2/mobile/prospectus/',

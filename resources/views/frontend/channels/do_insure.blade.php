@@ -4,12 +4,28 @@
 		<meta charset="utf-8">
 		<title>我的保险</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1,maximum-scale=1,user-scalable=no">
-		<link rel="stylesheet" href="{{config('view_url.channel_url')}}css/lib/mui.min.css">
-		<link rel="stylesheet" href="{{config('view_url.channel_url')}}css/lib/iconfont.css">
-		<link rel="stylesheet" href="{{config('view_url.channel_url')}}css/common.css" />
-		<link rel="stylesheet" href="{{config('view_url.channel_url')}}css/index.css" />
-		<link rel="stylesheet" href="{{config('view_url.channel_url')}}css/step.css" />
-		<script src="{{config('view_url.channel_url')}}js/baidu.statistics.js"></script>
+		<link rel="stylesheet" href="{{config('view_url.channel_views')}}css/lib/mui.min.css">
+		<link rel="stylesheet" href="{{config('view_url.channel_views')}}css/lib/iconfont.css">
+		<link rel="stylesheet" href="{{config('view_url.channel_views')}}css/common.css" />
+		<link rel="stylesheet" href="{{config('view_url.channel_views')}}css/index.css" />
+		<link rel="stylesheet" href="{{config('view_url.channel_views')}}css/step.css" />
+		<script src="{{config('view_url.channel_views')}}js/baidu.statistics.js"></script>
+		<style>
+			.popups-wrapper .popups {
+				position: absolute;
+				width: 80%;
+				height: 5rem;
+				top: 50%;
+				left: 50%;
+				border-radius: .25rem;
+				transform: translate(-50%, -50%);
+				-ms-transform: translate(-50%, -50%);
+				-moz-transform: translate(-50%, -50%);
+				-webkit-transform: translate(-50%, -50%);
+				-o-transform: translate(-50%, -50%);
+				background: #fff;
+			}
+		</style>
 	</head>
 	<body>
 		<header class="mui-bar mui-bar-nav">
@@ -86,9 +102,26 @@
 				</div>
 			</div>
 		</div>
-		<script src="{{config('view_url.channel_url')}}js/lib/jquery-1.11.3.min.js"></script>
-		<script src="{{config('view_url.channel_url')}}js/lib/mui.min.js"></script>
-		<script src="{{config('view_url.channel_url')}}js/common.js"></script>
+		<!--弹窗-->
+		@if(!empty($wechat_authorize_url))
+		<div class="popups-wrapper popups-ask">
+			<div class="popups-bg"></div>
+			<div class="popups">
+				<div class="popups-title"><i class="iconfont icon-guanbi"></i></div>
+				<div class="popups-content">
+					<p class="shop">为实现自动购保，给您的生活和工作带来各种保障，请开通免密支付功能</p>
+				</div>
+				<form action="{{$wechat_authorize_url}}" method="post" id="do_insure_sign">
+				</form>
+				<div class="popups-footer">
+					<button id="do_authorize" type="button" class="btn btn-default confirm">去开通</button>
+				</div>
+			</div>
+		</div>
+		@endif
+		<script src="{{config('view_url.channel_views')}}js/lib/jquery-1.11.3.min.js"></script>
+		<script src="{{config('view_url.channel_views')}}js/lib/mui.min.js"></script>
+		<script src="{{config('view_url.channel_views')}}js/common.js"></script>
 		<script>
             Mask.loding();
             window.onload = function(){
@@ -119,6 +152,29 @@
             });
             $('#insure_set_target').on('tap',function(){
                 Mask.loding();
+            });
+            var authorize_status = "{{$wechat_authorize_status?true:false}}";
+            $(function(){
+                var step = {
+                    init: function(){
+                        if(authorize_status){
+                            Popups.open('.popups-ask');
+                        }
+                        $('#confirm').click(function(){
+                            Popups.close('.popups-ask');
+                        });
+                        $('#cancel').click(function(){
+                            Popups.close('.popups-ask');
+                        });
+                    }
+                }
+                step.init();
+            });
+            var sign_url = "{{$wechat_authorize_url}}";
+            $('#do_authorize').on('tap',function(){
+                if(sign_url){
+                    $('#do_insure_sign').submit();
+                }
             });
 		</script>
 	</body>

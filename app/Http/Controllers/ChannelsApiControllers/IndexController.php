@@ -420,10 +420,75 @@ class IndexController extends BaseController
 			$warranty = true;//已经签约
 			$insure_auto_pay = true;
 		}
+		$wechat_authorize = $this->getWeChatAuthorize($person_code,$ip);
+		if($wechat_authorize['status']){
+			$wechat_authorize_status = 1;//获取签约链接状态
+			$wechat_authorize_url = $wechat_authorize['url'];//获取签约链接
+		}else{
+			$wechat_authorize_status = 0;//获取签约链接状态
+			$wechat_authorize_url = '';//获取签约链接
+		}
+
 		return view('frontend.channels.do_insure')
 			->with('person_code', $person_code)
 			->with('warranty', $warranty)
+			->with('wechat_authorize_status', $wechat_authorize_status)
+			->with('wechat_authorize_url', $wechat_authorize_url)
 			->with('insure_auto_pay', $insure_auto_pay);
+	}
+
+	//获取微信授权链接
+	public function getWeChatAuthorize($person_code,$ip){
+			//查询签约情况
+			$contrant_res = ChannelContract::where('channel_user_code', $person_code)
+				->select('contract_expired_time')
+				->first();
+			$return_data = [];
+			if (!empty($contrant_res)) {//已签约
+				$return_data['url'] = '';
+				$return_data['status'] = false;
+				return $return_data;
+			}
+			$channel_res = ChannelOperate::where('channel_user_code', $person_code)
+				->where('prepare_status', '200')
+				->where('operate_time', date('Y-m-d', strtotime(date('Y-m-d', time() - 24 * 3600) . '00:00:00')))
+				->select('proposal_num')
+				->first();
+			if(empty($channel_res)){//没有预订单
+				$return_data['url'] = '';
+				$return_data['status'] = false;
+				return $return_data;
+			}
+			$union_order_code = $channel_res['proposal_num'];
+			$data = [];
+			$data['price'] = '2';
+			$data['private_p_code'] = 'VGstMTEyMkEwMUcwMQ';
+			$data['quote_selected'] = '';
+			$data['insurance_attributes'] = '';
+			$data['union_order_code'] = $union_order_code;
+			$data['pay_account'] = $person_code;
+			$data['clientIp'] = $ip;
+			$data = $this->signhelp->tySign($data);
+			//发送请求
+			$response = Curl::to(env('TY_API_SERVICE_URL') . '/ins_curl/contract_ins')
+				->returnResponseObject()
+				->withData($data)
+				->withTimeout(60)
+				->post();
+			if ($response->status != 200) {
+				ChannelOperate::where('channel_user_code', $person_code)
+					->where('proposal_num', $union_order_code)
+					->update(['pay_status' => '500', 'pay_content' => $response->content]);
+				$return_data['url'] = '';
+				$return_data['status'] = false;
+				return $return_data;
+			}else{
+				$return_data = json_decode($response->content, true);//签约返回数据
+				$url = $return_data['result_content']['contracturl'];//禁止转义
+				$return_data['url'] = $url;
+				$return_data['status'] = true;
+				return $return_data;
+			}
 	}
 
 	//设置列表
