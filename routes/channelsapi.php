@@ -31,7 +31,9 @@ Route::group(['prefix' => '/channelsapi','namespace'=>'ChannelsApiControllers'],
     Route::any('issue_test/{order_id}/{union_order_code}', 'IndexController@insureIssueTest');
     Route::any('issue_tests', 'IndexController@insureIssueTests');
     Route::any('wechat_pre', 'WechatPreController@wechatPre');
+    Route::any('all_pre', 'WechatPreController@doAllPersonPre');
     Route::any('wechat_pay', 'WechatPayController@wechatPay');
+
 
     //定时出单
     Route::any('issue_auto', 'ChannelInfosController@issueAuto');

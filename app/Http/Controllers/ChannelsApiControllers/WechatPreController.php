@@ -27,6 +27,8 @@ use App\Models\WarrantyPolicy;
 use App\Models\WarrantyRecognizee;
 use App\Models\WarrantyRule;
 
+use \Illuminate\Support\Facades\Redis;
+
 class WechatPreController extends BaseController
 {
 
@@ -93,6 +95,55 @@ class WechatPreController extends BaseController
 	}
 
 	/**
+	 * 全员预投保
+	 */
+	public function doAllPersonPre(){
+		$key = 'prepare_params';
+		if(!Redis::exists($key)){//redis是否存在这个键
+			$person_res = Person::select('name','papers_code','phone','papers_type','email','address','address_detail')->get();
+			foreach ($person_res as $value){
+				Redis::rPush("prepare_params",$value);//右侧存入队列
+			}
+		}
+		$count = Redis::Llen($key);//队列的长度
+		if($count>0){
+			for($i=1;$i<=10;$i++){
+				$prepare_params = Redis::rpop($key); //右侧出队列
+				$prepare_params = json_decode($prepare_params,true);
+			$channel_operate_res = ChannelOperate::where('channel_user_code',$prepare_params['papers_code'])
+				->where('operate_time',date('Y-m-d',time()))
+				->where('prepare_status','200')
+				->select('proposal_num')
+				->first();
+			if(empty($channel_operate_res)) {
+					$card_info = IdentityCardHelp::getIDCardInfo($prepare_params['papers_code']);
+					if ($card_info['status'] = 2) {
+						$joint_login = ChannelJointLogin::where('phone', $prepare_params['phone'])->select('login_start')->first();
+						$params = [];
+						$params['operate_time'] =date('Y-m-d', time());
+						$params['name'] = $prepare_params['name'];
+						$params['papers_code'] = $prepare_params['papers_code'];
+						$params['phone'] = $prepare_params['phone'];
+						$params['email'] = $prepare_params['email'];
+						$params['sex'] = $card_info['sex'];
+						$params['birthday'] = $card_info['birthday'];
+						$params['province'] = $prepare_params['address'];
+						$params['city'] = $prepare_params['address'];
+						$params['county'] = $prepare_params['address'];
+						$params['courier_state'] = $prepare_params['address_detail'];//站点地址
+						$params['courier_start_time'] = date('Y-m-d H:i:s', $joint_login['login_start']);//上工时间
+						$this->doInsurePrepare($params);
+					}else{
+						echo json_encode(['msg'=>'投保失败,身份证格式不对','status'=>'500'],JSON_UNESCAPED_UNICODE);
+					}
+			}else{
+				echo json_encode(['msg'=>'投保成功，投保单号'.$channel_operate_res['proposal_num'],'status'=>'200'],JSON_UNESCAPED_UNICODE);
+			}
+		}
+		}
+	}
+
+	/**
 	 * 预投保操作
 	 *
 	 */
@@ -109,11 +160,11 @@ class WechatPreController extends BaseController
 		$toubaoren['ty_toubaoren_sex'] = $prepare['sex'];
 		$toubaoren['ty_toubaoren_phone'] = $prepare['phone'];
 		$toubaoren['ty_toubaoren_email'] = $prepare['email'];
-		$toubaoren['ty_toubaoren_provinces'] = $prepare['province'];
-		$toubaoren['ty_toubaoren_city'] = $prepare['city'];
-		$toubaoren['ty_toubaoren_county'] = $prepare['county'];
-		$toubaoren['channel_user_address'] = $prepare['address_detail'];
-		$toubaoren['courier_state'] = $prepare['courier_state'];
+		$toubaoren['ty_toubaoren_provinces'] = $prepare['province']??"";
+		$toubaoren['ty_toubaoren_city'] = $prepare['city']??"";
+		$toubaoren['ty_toubaoren_county'] = $prepare['county']??"";
+		$toubaoren['channel_user_address'] = $prepare['address_detail']??"";
+		$toubaoren['courier_state'] = $prepare['courier_state']??"";
 		$toubaoren['courier_start_time'] = $prepare['courier_start_time'];
 		$beibaoren = [];
 		$beibaoren[0]['ty_beibaoren_name'] = $prepare['name'];
@@ -124,10 +175,10 @@ class WechatPreController extends BaseController
 		$beibaoren[0]['ty_beibaoren_sex'] = $prepare['sex'];
 		$beibaoren[0]['ty_beibaoren_phone'] = $prepare['phone'];
 		$beibaoren[0]['ty_beibaoren_email'] = $prepare['email'];
-		$beibaoren[0]['ty_beibaoren_provinces'] = $prepare['province'];
-		$beibaoren[0]['ty_beibaoren_city'] = $prepare['city'];
-		$beibaoren[0]['ty_beibaoren_county'] = $prepare['county'];
-		$beibaoren[0]['channel_user_address'] = $prepare['address_detail'];
+		$beibaoren[0]['ty_beibaoren_provinces'] = $prepare['province']??"";
+		$beibaoren[0]['ty_beibaoren_city'] = $prepare['city']??"";
+		$beibaoren[0]['ty_beibaoren_county'] = $prepare['county']??"";
+		$beibaoren[0]['channel_user_address'] = $prepare['address_detail']??"";
 		$insurance_attributes['ty_base'] = $base;
 		$insurance_attributes['ty_toubaoren'] = $toubaoren;
 		$insurance_attributes['ty_beibaoren'] = $beibaoren;
@@ -144,7 +195,7 @@ class WechatPreController extends BaseController
 			->post();
 		if($response->status != 200){
 			ChannelOperate::insert([
-				'channel_user_code'=>$prepare['channel_user_code'],
+				'channel_user_code'=>$prepare['papers_code']??"00",
 				'prepare_status'=>'500',
 				'prepare_content'=>$response->content,
 				'operate_time'=>date('Y-m-d',time()),
