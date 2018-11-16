@@ -160,14 +160,16 @@ class InsApiController
 //        dump($biz_content);
 //        $is_mobile = $this->is_mobile();
         //天眼接口参数封装
+		//dump(json_encode($biz_content));
         $data = $this->_signHelp->tySign($biz_content);
+        //dd(json_encode($data));
         //发送请求
         $response = Curl::to(env('TY_API_SERVICE_URL') . '/ins_curl/quote')
             ->returnResponseObject()
             ->withData($data)
             ->withTimeout(60)
             ->post();
-//        print_r($response->content);exit;
+        //print_r($response->content);exit;
 //        dd(json_decode($response->content));exit;
         if($response->status !== 200)
             return response($response->content, $response->status);
